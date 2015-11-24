@@ -28,8 +28,7 @@ def get_praw():
     return r
 
 def main(r):
-    try:
-        ##### MAIN CODE #####
+    ##### MAIN CODE #####
 
 if __name__ == "__main__":
     while True:
