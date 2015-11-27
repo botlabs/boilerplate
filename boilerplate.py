@@ -40,6 +40,10 @@ def main(r, session_data):
 if __name__ == "__main__":
     while True:
         try:
+            print("Retrieving new OAuth token...")
             main(*get_praw())
         except praw.errors.OAuthInvalidToken:
             print("OAuth token expired.")
+        except praw.errors.HTTPException:
+            print("HTTP error. Retrying in 10...")
+            time.sleep(10)
