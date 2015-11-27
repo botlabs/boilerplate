@@ -1,5 +1,6 @@
 import praw
 import requests
+import time
 
 # Account settings (private)
 USERNAME = ''
@@ -13,26 +14,32 @@ REDIRECT_URI = 'http://127.0.0.1:65010/authorize_callback'
 # Configuration Settings
 USER_AGENT = ""
 AUTH_TOKENS = ["identity","read"]
+EXPIRY_BUFFER = 60
 
-def get_access_token():
+def get_session_data():
     response = requests.post("https://www.reddit.com/api/v1/access_token",
       auth = requests.auth.HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET),
       data = {"grant_type": "password", "username": USERNAME, "password": PASSWORD},
       headers = {"User-Agent": USER_AGENT})
-    return dict(response.json())["access_token"]
+    return dict(response.json()).update({'retrieved_at':time.time()})
 
 def get_praw():
     r = praw.Reddit(USER_AGENT)
     r.set_oauth_app_info(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
-    r.set_access_credentials(set(AUTH_TOKENS), get_access_token())
-    return r
+    session_data = get_session_data()
+    r.set_access_credentials(set(AUTH_TOKENS), session_data['access_token'])
+    return (r, session_data)
 
-def main(r):
+def main(r, session_data):
+    EXPIRES_AT = session_data['retrieved_at'] + session_data['expires_in']
+    # While True: # (Goes here if program runs constantly)
+    if time.time() >= EXPIRES_AT - EXPIRY_BUFFER:
+        raise praw.errors.OAuthInvalidToken
     ##### MAIN CODE #####
 
 if __name__ == "__main__":
     while True:
         try:
-            main(get_praw())
+            main(*get_praw())
         except praw.errors.OAuthInvalidToken:
             print("OAuth token expired.")
