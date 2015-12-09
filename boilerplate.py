@@ -21,7 +21,9 @@ def get_session_data():
       auth = requests.auth.HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET),
       data = {"grant_type": "password", "username": USERNAME, "password": PASSWORD},
       headers = {"User-Agent": USER_AGENT})
-    return dict(response.json()).update({'retrieved_at':time.time()})
+    response_dict = dict(response.json())
+    response_dict['retrieved_at'] = time.time()
+    return response_dict
 
 def get_praw():
     r = praw.Reddit(USER_AGENT)
